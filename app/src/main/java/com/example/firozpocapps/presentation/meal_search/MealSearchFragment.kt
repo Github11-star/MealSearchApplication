@@ -9,6 +9,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.databinding.adapters.SearchViewBindingAdapter.setOnQueryTextListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.coroutineScope
+import androidx.navigation.fragment.findNavController
 import com.example.firozpocapps.R
 import com.example.firozpocapps.databinding.FragmentMealSearchBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,7 +19,7 @@ class MealSearchFragment : Fragment() {
 
     private var _binding: FragmentMealSearchBinding? = null
     val binding: FragmentMealSearchBinding
-    get() = _binding!!
+        get() = _binding!!
 
     private val mealSearchViewModel: MealSearchViewModel by viewModels()
 
@@ -34,7 +35,7 @@ class MealSearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        _binding = FragmentMealSearchBinding.inflate(inflater,container,false)
+        _binding = FragmentMealSearchBinding.inflate(inflater, container, false)
         return _binding!!.root
     }
 
@@ -57,23 +58,31 @@ class MealSearchFragment : Fragment() {
         }
 
         lifecycle.coroutineScope.launchWhenCreated {
-            mealSearchViewModel.mealSearchList.collect{
-                if (it.isLoading){
-                    binding.progressMealSearch.visibility=View.VISIBLE
+            mealSearchViewModel.mealSearchList.collect {
+                if (it.isLoading) {
+                    binding.notFound.visibility =View.GONE
+                    binding.progressMealSearch.visibility = View.VISIBLE
                 }
-                if (it.error.isNotBlank()){
-                    binding.progressMealSearch.visibility=View.GONE
+                if (it.error.isNotBlank()) {
+                    binding.notFound.visibility =View.GONE
+                    binding.progressMealSearch.visibility = View.GONE
                 }
 
                 it.data?.let {
-                    binding.progressMealSearch.visibility=View.GONE
+                    if (it.isEmpty()){
+                        binding.notFound.visibility =View.VISIBLE
+                    }
+                    binding.progressMealSearch.visibility = View.GONE
                     mealSearchAdapter.setContentList(it.toMutableList())
                 }
             }
         }
+
+        mealSearchAdapter.itemClickListener {
+            findNavController().navigate(
+                MealSearchFragmentDirections.actionMealSearchFragmentToMealDetailsFragment(
+                    mealId = it.mealId)
+            )
+        }
     }
-
-
-
-
 }
